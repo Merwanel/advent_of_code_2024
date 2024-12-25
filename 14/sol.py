@@ -1,3 +1,6 @@
+import json
+import math
+import zlib
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -29,7 +32,7 @@ def solve(file : str, N: int, M: int, sec: int, print_grid=False) -> tuple[int, 
     if print_grid :
         [print("".join(map(lambda c : '*' if c > 0 else ' ', row))) for row in grid]
         
-    return q1 * q2 * q3 * q4, np.var(xs), np.var(ys)
+    return q1 * q2 * q3 * q4, np.var(xs), np.var(ys), len(zlib.compress(json.dumps(grid).encode()))
 
 
 ##############################################
@@ -40,27 +43,37 @@ print(solve('input.txt', 103, 101, 100)[0]) # 211692000
 
 
 ##############################################
-########## part2
+########## part2 with variance or entropy (estimated with encoding size)
 ##############################################
 varx, vary = [], []
+min_entropy = math.inf
+sec_min_entropy =-1
 SEC_MAX = 10_000
 for sec in range(1, SEC_MAX) :
-    _ , vx, vy = solve('input.txt', 103, 101, sec)
+    _ , vx, vy, entropy = solve('input.txt', 103, 101, sec)
     varx.append(vx)
     vary.append(vy)
+    if min_entropy > entropy :
+        sec_min_entropy = sec
+        min_entropy = entropy
+        
+print(f"min_entropy={min_entropy}, sec_min_entropy_estimated_w_encoding_size={sec_min_entropy}")
 
-
-plt.scatter(range(1, SEC_MAX), varx, s=.5)
-plt.ylabel('varx')
-plt.xlabel('secondes')
-plt.show()  # -> few under 500
-plt.scatter(range(1, SEC_MAX), vary, s=.5)
-plt.ylabel('vary')
-plt.xlabel('secondes')
-plt.show()  # -> few under 400
+# plt.scatter(range(1, SEC_MAX), varx, s=.5)
+# plt.ylabel('varx')
+# plt.xlabel('secondes')
+# plt.show()  # -> few under 500
+# plt.scatter(range(1, SEC_MAX), vary, s=.5)
+# plt.ylabel('vary')
+# plt.xlabel('secondes')
+# plt.show()  # -> few under 400
 
 for i, (vx, vy) in enumerate(zip(varx, vary)) :
     if vx < 500 and vy < 400 :
         print('sec=',i+1)
         solve('input.txt', 103, 101, sec=i+1, print_grid=True)  # -> easter egg at 6587
+        
+        
+
+
         
