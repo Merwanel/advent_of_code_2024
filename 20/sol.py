@@ -1,5 +1,4 @@
 import collections
-import heapq
 import math
 import sys
 sys.setrecursionlimit(100_000)
@@ -32,7 +31,7 @@ def solve(file : str, saving_target_at_least: int, cheat_time_max:int=2) -> tupl
 
     def bfs(base_time=-1,is_cheating_allowed=False, cheat_last_time:int=-1,saving_target=-math.inf) :
         q = collections.deque([(r_start, c_start, is_cheating_allowed, cheat_last_time-1, set([(r_start, c_start)]), [])])
-        # q = collections.deque([(r_start, c_start, is_cheating_allowed, cheat_last_time-1, set([(r_start, c_start)]))])
+
         ans = 0
         time = 0
         time_max = base_time - saving_target 
@@ -40,12 +39,11 @@ def solve(file : str, saving_target_at_least: int, cheat_time_max:int=2) -> tupl
             size = len(q)
             for _ in range(size) :
                 r, c, is_cheat_available, cheat_remaining_time, seen,path  = q.popleft()
-                # r, c, is_cheat_available, cheat_remaining_time, seen  = q.popleft()
+
                 is_cheat_available = is_cheat_available and cheat_remaining_time >= 0
                 is_cheat_activated = is_cheat_available and cheat_remaining_time < cheat_last_time-1
                 
-                # if (r,c)==(7,7) :
-                #     print(path, len(path), is_cheat_available, cheat_remaining_time)
+                
                 for dr, dc in DIRECTIONS :
                     r2, c2 = r+dr,c+dc
                     if 0 <= r2 < N and 0 <= c2 < M and (r2, c2) not in seen :   
@@ -58,30 +56,26 @@ def solve(file : str, saving_target_at_least: int, cheat_time_max:int=2) -> tupl
                             elif is_cheat_available : 
                                 if not is_cheat_activated :
                                     q.append((r2, c2 , is_cheat_available, cheat_remaining_time, seen | {(r2,c2)}, path + [(r2,c2)]))
-                                    # q.append((r2, c2 , is_cheat_available, cheat_remaining_time, seen | {(r2,c2)}))
                                 elif is_cheat_activated and  cheat_remaining_time > 0 :
                                     q.append((r2, c2 , is_cheat_available, cheat_remaining_time-1, seen | {(r2,c2)}, path + [(r2,c2,'h')]))
-                                    # q.append((r2, c2 , is_cheat_available, cheat_remaining_time-1, seen | {(r2,c2)}))
-                                    # print(r2, c2 , is_cheat_available, cheat_remaining_time-1, seen | {(r2,c2)})
                         elif is_cheat_available and cheat_remaining_time > 0 :
                             q.append((r2, c2 , is_cheat_available,cheat_remaining_time-1, seen | {(r2,c2)}, path + [(r2,c2,True)]))
-                            # q.append((r2, c2 , is_cheat_available,cheat_remaining_time-1, seen | {(r2,c2)}))
+
             time += 1
-        # print([print(r) for r in q])
+        
         return ans
     base_time = dfs(r_start, c_start)
     time_without_cheating_from_start_to_end = time_without_cheating.copy()
     time_without_cheating_from_start_to_end[(r_end,c_end)] = 0
     time_without_cheating = {}
-    # print(time_without_cheating_from_start_to_end)
+
     dfs(r_end, c_end, target='S')
     time_without_cheating_from_end_to_start = time_without_cheating.copy()
     time_without_cheating_from_end_to_start[(r_start,c_start)] = 0
-    # print(time_without_cheating_from_end_to_start)
+
     ans = 0
     target_time = base_time - saving_target_at_least
     for r1 in range(N) : 
-        # print(r1)
         for c1 in range(M) :
             if grid[r1][c1] == '#' :
                 continue
@@ -92,42 +86,7 @@ def solve(file : str, saving_target_at_least: int, cheat_time_max:int=2) -> tupl
                     dist_manhathan = abs(r1-r2) + abs(c1-c2)
                     if dist_manhathan <= cheat_time_max and time_without_cheating_from_end_to_start[(r1,c1)] + dist_manhathan + time_without_cheating_from_start_to_end[(r2,c2)] <= target_time :
                         ans += 1
-                        # print((r1,c1), (r2,c2), dist_manhathan, time_without_cheating_from_end_to_start[(r1,c1)] + dist_manhathan + time_without_cheating_from_start_to_end[(r2,c2)] , target_time)
     return ans
-    nb=0
-    # print(good_path)
-    # nb = bfs(base_time=base_time, is_cheating_allowed=True, cheat_last_time=cheat_last_time, saving_target=saving_target_at_least)
-    ans = set()
-    path = []
-    def dfs2(r,c, time, time_max, cheat_remaining_time, is_cheat_activated, start:tuple[int,int], seen ) :
-        # if (r, c) == (7,7) :
-        if time > time_max :
-            return
-        if grid[r][c] == 'E' or (grid[r][c] == '.' and time + time_without_cheating.get((r,c), math.inf)  <= time_max) :
-            ans.add((*start, r,c))
-            print('H',time, time_max,start,(r,c),grid[r][c] , cheat_remaining_time,is_cheat_activated, path)
-            # cheats can last any amount of time up to and including 20 picoseconds (but can still only end when the program is on normal track)
-            # return
-        if is_cheat_activated and cheat_remaining_time == 0 :
-            return
-        for dr, dc in DIRECTIONS :
-            r2, c2 = r+dr, c+dc
-            if 0 <= r2 < N and 0 <= c2 < M and (r2, c2) not in seen :
-                if is_cheat_activated and cheat_remaining_time > 0: 
-                    path.append((r2,c2))
-                    dfs2(r2, c2, time+1, time_max, cheat_remaining_time-1, is_cheat_activated, start, seen | {(r2,c2)})
-                    path.pop()
-                elif grid[r2][c2] == '#' and not is_cheat_activated : 
-                    path.append((r2,c2, True))
-                    dfs2(r2, c2, time+1, time_max, cheat_remaining_time-1, True, (r,c), seen | {(r2,c2)})
-                    path.pop()
-                elif grid[r2][c2] == '.' :
-                    path.append((r2,c2))
-                    dfs2(r2, c2, time+1, time_max, cheat_remaining_time, is_cheat_activated, start, seen | {(r2,c2)})
-                    path.pop()
-    dfs2(r_start, c_start, 0, base_time - saving_target_at_least , cheat_time_max, False, (-1,-1), set())
-    print(ans)
-    return len(ans)
 
 #########################
 ########  part 1
